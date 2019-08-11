@@ -11,6 +11,7 @@ rayon = "*"
 console = "*"
 lazy_static = "*"
 aho-corasick = "0.7.6"
+itertools = "0.8.0"
 
 [toolchain.optional]
 rust-std = ["x86_64-pc-windows-gnu"]

@@ -17,6 +17,7 @@ use std::collections::BTreeMap;
 use std::env;
 
 use aho_corasick::AhoCorasick;
+use itertools::Itertools;
 
 mod terminal_render;
 
@@ -83,9 +84,6 @@ fn main() {
     let u: Vec<String> = vpn.par_iter().flat_map(|p| {
         let hu = input(p.to_string(),&normal_string);
         let dat = filter(&hu, &vpn);
-        if !dat.is_empty() {
-            println!("{:?}: {:?}", p, dat);
-        }
 
 /*        if let Ok(mut e) = finished.lock() {
             e.tp += 1;
@@ -152,12 +150,13 @@ fn filter(dat: &[String], vpn: &[String]) -> Vec<String> {
 fn filter_gdat(dat: &[String], vpn: &[String]) -> Vec<String> {
   let ac = AhoCorasick::new(dat);
   let matched_indices = {
-    vpn.iter().flat_map(|haystack| ac.find_overlapping_iter(haystack).map(|m| m.pattern()))
+    vpn.iter().flat_map(|haystack| {
+        ac.find_overlapping_iter(haystack).map(|m| m.pattern())
+          .unique() // only count the first match of each needle in the haystack
+    })
   };
 
-  let counts = get_counts(matched_indices);
-  println!("{:?}", counts);
-  counts.into_iter()
+  get_counts(matched_indices).into_iter()
     .filter(|&(_, count)| count > 1)
     .map(|(index, _)| dat[index].to_string())
     .collect()
