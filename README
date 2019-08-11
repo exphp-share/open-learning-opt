@@ -1,0 +1,4 @@
+# Run the rust project
+cargo run --release
+# Run the JS project
+node data.js

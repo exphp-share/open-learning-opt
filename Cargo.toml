@@ -1,0 +1,22 @@
+[package]
+name = "open_learning"
+version = "0.1.0"
+authors = ["ccgauche"]
+edition = "2018"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[dependencies]
+rayon = "*"
+console = "*"
+lazy_static = "*"
+
+[toolchain.optional]
+rust-std = ["x86_64-pc-windows-gnu"]
+
+[target.x86_64-pc-windows-gnu]
+linker = "/usr/bin/x86_64-w64-mingw32-gcc"
+
+[profile.release]
+debug = true
+
