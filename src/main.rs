@@ -74,17 +74,13 @@ fn main() {
     terminal_render::set_end(1,now1.elapsed().as_millis());
     let now = Instant::now();
     terminal_render::set_loading(0,0.0,None);
-    let bigger_vec: Mutex<Vec<String>> = Mutex::new(Vec::new());
     let finished: Mutex<terminal_render::Type> = Mutex::new(terminal_render::Type::new(0));
     let ln = vpn.len() as f32;
 
     let lastp: Mutex<terminal_render::Type> = Mutex::new(terminal_render::Type::new(0));
-    vpn.par_iter().for_each(|p| {
+    let u: Vec<String> = vpn.par_iter().flat_map(|p| {
         let hu = input(p.to_string(),&normal_string);
         let dat = filter(&hu,&vpn);
-        if let Ok(mut e) = bigger_vec.lock() {
-            e.extend(dat);
-        }
 
         if let Ok(mut e) = finished.lock() {
             e.tp += 1;
@@ -96,12 +92,12 @@ fn main() {
                 }
             }
         }
-    });
+        dat
+    }).collect();
     terminal_render::set_end(0,now.elapsed().as_millis());
 
     let now = Instant::now();
     terminal_render::set_loading(2,0.0,None);
-    let u = bigger_vec.lock().unwrap();
     let o = format!("{:?}",filter(&u,&vpn));
     terminal_render::set_loading(2,50.0,None);
     let mut file = File::create("MODEL.txt").unwrap();
