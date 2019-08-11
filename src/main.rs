@@ -115,6 +115,7 @@ fn temps_restant(i: &Instant,p: f32) -> u32 {
     (time_pp*(100.0-p)) as u32
 }
 
+#[inline(never)]
 fn input(b: String, normal: &str) -> Vec<String> {
     let mut dat: Vec<String> = Vec::with_capacity(b.len());
     for x in 0..(b.len() - 3) {
@@ -129,6 +130,7 @@ fn input(b: String, normal: &str) -> Vec<String> {
     dat
 }
 
+#[inline(never)]
 fn clear(e: String) -> String {
     let mut i = String::new();
     let p = "abcdefghijklmnopqrstuvwxyz0123456789. ";
@@ -141,6 +143,11 @@ fn clear(e: String) -> String {
 }
 
 fn filter(dat: &[String],vpn: &[String]) -> Vec<String> {
+  filter_lua(filter_gdat(dat, vpn))
+}
+
+#[inline(never)]
+fn filter_gdat(dat: &[String], vpn: &[String]) -> Vec<String> {
   let mut gdat = Vec::with_capacity(dat.len());
   for q in dat {
     let mut count: u32 = 0;
@@ -153,7 +160,11 @@ fn filter(dat: &[String],vpn: &[String]) -> Vec<String> {
         gdat.push(q.to_string());
     }
   }
+  gdat
+}
 
+#[inline(never)]
+fn filter_lua(gdat: Vec<String>) -> Vec<String> {
   let mut lua: Vec<String> = Vec::new();
   'loop3: for x in &gdat {
     for y in &gdat {
