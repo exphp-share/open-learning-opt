@@ -1,2 +1,4 @@
 MODEL.txt
 target/
+perf.data
+perf.data.old
