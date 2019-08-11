@@ -81,8 +81,11 @@ fn main() {
     let u: Vec<String> = vpn.par_iter().flat_map(|p| {
         let hu = input(p.to_string(),&normal_string);
         let dat = filter(&hu,&vpn);
+        if !dat.is_empty() {
+            println!("{:?}: {:?}", p, dat);
+        }
 
-        if let Ok(mut e) = finished.lock() {
+/*        if let Ok(mut e) = finished.lock() {
             e.tp += 1;
             let y = (e.tp  as f32)/ln * 100.0;
             if let Ok(mut i) = lastp.lock() {
@@ -92,6 +95,7 @@ fn main() {
                 }
             }
         }
+*/
         dat
     }).collect();
     terminal_render::set_end(0,now.elapsed().as_millis());
@@ -173,4 +177,24 @@ fn filter_lua(gdat: Vec<String>) -> Vec<String> {
     }
   }
   lua
+}
+
+#[test]
+fn gdat() {
+    let strings = |strs: &[&str]| strs.iter().map(|s| s.to_string()).collect::<Vec<_>>();
+    assert_eq!(
+        filter_gdat(
+            &strings(&[
+                "a", // appears in three inputs
+                "aaaabbaa", // never appears
+                "lol", // appears once at the end and once in the middle
+                "wards", // only appears in one input, but twice
+                "copter", // only appears once at the end
+                "be", // appears twice in the middle
+                "n't", // one of the occurences is the complete string
+            ]),
+            &strings(&["abea", "roflolacopter", "don't wardsy wards be happy lol", "n't"]),
+        ),
+        strings(&["a", "lol", "be", "n't"]),
+    );
 }
