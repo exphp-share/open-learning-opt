@@ -148,19 +148,10 @@ fn filter(dat: &[String],vpn: &[String]) -> Vec<String> {
 
 #[inline(never)]
 fn filter_gdat(dat: &[String], vpn: &[String]) -> Vec<String> {
-  let mut gdat = Vec::with_capacity(dat.len());
-  for q in dat {
-    let mut count: u32 = 0;
-    for d in vpn {
-      if d.contains(q) {
-        count+=1;
-      }
-    }
-    if count > 1 {
-        gdat.push(q.to_string());
-    }
-  }
-  gdat
+  dat.iter()
+    .filter(|q| vpn.iter().filter(|d| d.contains(&q[..])).count() > 1)
+    .map(|s| s.to_string())
+    .collect()
 }
 
 #[inline(never)]
