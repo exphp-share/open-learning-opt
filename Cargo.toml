@@ -10,6 +10,7 @@ edition = "2018"
 rayon = "*"
 console = "*"
 lazy_static = "*"
+aho-corasick = "0.7.6"
 
 [toolchain.optional]
 rust-std = ["x86_64-pc-windows-gnu"]

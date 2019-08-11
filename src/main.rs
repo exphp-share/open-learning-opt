@@ -2,6 +2,7 @@ extern crate rayon;
 extern crate console;
 #[macro_use]
 extern crate lazy_static;
+extern crate aho_corasick;
 
 use rayon::prelude::*;
 use std::sync::Mutex;
@@ -11,10 +12,11 @@ use std::fs;
 use std::time::Instant;
 use std::fs::File;
 use std::io::Write;
+use std::collections::BTreeMap;
 
 use std::env;
 
-
+use aho_corasick::AhoCorasick;
 
 mod terminal_render;
 
@@ -80,7 +82,7 @@ fn main() {
     let lastp: Mutex<terminal_render::Type> = Mutex::new(terminal_render::Type::new(0));
     let u: Vec<String> = vpn.par_iter().flat_map(|p| {
         let hu = input(p.to_string(),&normal_string);
-        let dat = filter(&hu,&vpn);
+        let dat = filter(&hu, &vpn);
         if !dat.is_empty() {
             println!("{:?}: {:?}", p, dat);
         }
@@ -142,16 +144,31 @@ fn clear(e: String) -> String {
     i
 }
 
-fn filter(dat: &[String],vpn: &[String]) -> Vec<String> {
+fn filter(dat: &[String], vpn: &[String]) -> Vec<String> {
   filter_lua(filter_gdat(dat, vpn))
 }
 
 #[inline(never)]
 fn filter_gdat(dat: &[String], vpn: &[String]) -> Vec<String> {
-  dat.iter()
-    .filter(|q| vpn.iter().filter(|d| d.contains(&q[..])).count() > 1)
-    .map(|s| s.to_string())
+  let ac = AhoCorasick::new(dat);
+  let matched_indices = {
+    vpn.iter().flat_map(|haystack| ac.find_overlapping_iter(haystack).map(|m| m.pattern()))
+  };
+
+  let counts = get_counts(matched_indices);
+  println!("{:?}", counts);
+  counts.into_iter()
+    .filter(|&(_, count)| count > 1)
+    .map(|(index, _)| dat[index].to_string())
     .collect()
+}
+
+fn get_counts<T: Ord, I: IntoIterator<Item=T>>(iter: I) -> BTreeMap<T, usize> {
+    let mut map = BTreeMap::new();
+    for value in iter {
+        *map.entry(value).or_insert(0) += 1;
+    }
+    map
 }
 
 #[inline(never)]
@@ -173,19 +190,19 @@ fn filter_lua(gdat: Vec<String>) -> Vec<String> {
 #[test]
 fn gdat() {
     let strings = |strs: &[&str]| strs.iter().map(|s| s.to_string()).collect::<Vec<_>>();
+    let inputs = strings(&["abea", "roflolacopter", "don't wardsy wards be happy lol", "n't"]);
+    let dat = strings(&[
+        "a", // appears in three inputs
+        "aaaabbaa", // never appears
+        "lol", // appears once at the end and once in the middle
+        "wards", // only appears in one input, but twice
+        "copter", // only appears once at the end
+        "be", // appears twice in the middle
+        "n't", // one of the occurences is the complete string
+        "b", // overlaps with "be"
+    ]);
     assert_eq!(
-        filter_gdat(
-            &strings(&[
-                "a", // appears in three inputs
-                "aaaabbaa", // never appears
-                "lol", // appears once at the end and once in the middle
-                "wards", // only appears in one input, but twice
-                "copter", // only appears once at the end
-                "be", // appears twice in the middle
-                "n't", // one of the occurences is the complete string
-            ]),
-            &strings(&["abea", "roflolacopter", "don't wardsy wards be happy lol", "n't"]),
-        ),
-        strings(&["a", "lol", "be", "n't"]),
+        filter_gdat(&dat, &inputs),
+        strings(&["a", "lol", "be", "n't", "b"]),
     );
 }
